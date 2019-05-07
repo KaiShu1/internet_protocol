@@ -43,14 +43,3 @@ cs.connect(s_addr)
 cs.send(b'haha')
 
 cs.close()
-
-# 在TCP中，如果一方收到了对方的数据，其一定会发送ack确认包
-# 而在UDP中，没有这个过程，所以导致tcp稳定，udp不稳定
-
-# tcp三次握手
-'''
-1. syn       :客户端生成一个随机的数字发给服务器
-2. ack + syn :服务器响应第一个syn数字+1 和 一个随机的数字发给客户端
-3. ack       :ack称为响应包，在syn数字基础上+1
-'''
-
