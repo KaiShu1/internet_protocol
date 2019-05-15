@@ -19,39 +19,46 @@ class HTTPServer(object):
         self.s_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.s_socket.bind(('', port))
         self.s_socket.listen(5)
+        self.response_start_line = b''
+        self.response_headers = b''
 
-    def start_response(self):
-        pass
+    def start_response(self, status, headers):
+        self.response_start_line = b'HTTP/1.1 ' + status + b'\r\n'
+        # WSGI规定 app传来的headers是以元组保存一组数据,整体以列表存在
+        for header in headers:
+            self.response_headers += bytes('%s: %s\r\n' % header, 'utf-8')
 
     def handle_client(self, c_s):
         request_data = c_s.recv(1024)
         if len(request_data) > 0:
             # 对HTTP请求抽丝剥茧 选出请求页面
-            response_start_line = bytes("HTTP/1.1 200 OK\r\n", 'utf-8')
-            response_headers = bytes("Server: MServer\r\n", 'utf-8')
+            self.response_start_line = b'HTTP/1.1 200 OK\r\n'
+            self.response_headers = b'Server: MServer\r\n'
             request_path = str(request_data.splitlines()[0].split(b' ')[1], 'utf-8')
             print(request_path)
-            # response_body = ''
-
             if "/" == request_path:
                 with open(STATIC_ROOT_PATH + "/index.html", 'rb') as f:
                     response_body = f.read()
             elif ".py" == request_path[-3:]:
                 path.insert(1, PROGRAM_ROOT_PATH)
                 exec_pro = __import__(request_path[1:-3])
-                response_body = bytes(exec_pro.app({}, self.start_response), 'utf-8')
+                env = {
+                    'name': 'shukai',
+                }
+                response_body = exec_pro.app(env, self.start_response)
             else:
                 try:
                     with open(STATIC_ROOT_PATH + request_path, 'rb') as f:
                         response_body = f.read()
                 except FileNotFoundError:
                     response_body = b'<h1>404 File Not Found</h1>'
-
             # 由于HTTP请求报文其 请求头和请求体 之间用空行区分
             # 在字符串类型下设置\n即换行,但在真正windows数据中是默认采用\r\n的
-            response = response_start_line + response_headers + b"\r\n" + response_body
+            response = self.response_start_line + self.response_headers + b"\r\n" + response_body
             print(response)
             c_s.send(response)
+        else:
+            c_s.close()
 
     def run(self):
         while True:

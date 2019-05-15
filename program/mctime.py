@@ -2,6 +2,10 @@ import time
 
 
 def app(environ, start_response):
-    start_response()
-    return time.ctime()
+    status = b'200 OK'
+    headers = [
+        ('Content-Type', 'text/plain')
+    ]
+    start_response(status, headers)
+    return bytes(environ['name'] + '\t' + time.ctime(), 'utf-8')
 
