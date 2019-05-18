@@ -1,4 +1,3 @@
-from dynamic_web_server import HTTPServer
 from dynamic_web_urls import *
 
 
@@ -22,7 +21,10 @@ class Application(object):
         return 'not found'
 
 
+app = Application(urls)
+'''
 if __name__ == "__main__":
     app = Application(urls)
     server = HTTPServer(app)
     server.run()
+'''

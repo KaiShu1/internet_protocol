@@ -1,9 +1,8 @@
+import sys
 from socket import *
 from multiprocessing import Process
-from sys import path
 
 STATIC_ROOT_PATH = './static'
-PROGRAM_ROOT_PATH = './program'
 
 
 class HTTPServer(object):
@@ -33,6 +32,9 @@ class HTTPServer(object):
         if len(request_data) > 0:
             # 对HTTP请求抽丝剥茧 选出请求页面
             request_path = str(request_data.splitlines()[0].split(b' ')[1], 'utf-8')
+            if request_path.startswith('/static'):
+                # 此处可以添加静态文件单独处理方法
+                pass
             print(request_path)
             env = {
                 'PATH_INFO': request_path,
@@ -56,7 +58,10 @@ class HTTPServer(object):
 
 
 def main():
-    s = HTTPServer()
+    # 设置额外运行参数 dynamic_web_framework:app
+    module_name, app = sys.argv[1].split(":")
+    app = __import__(module_name).app
+    s = HTTPServer(app)
     s.run()
 
 
